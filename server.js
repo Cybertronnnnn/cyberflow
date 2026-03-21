@@ -6,6 +6,8 @@ const { createClient } = require('@supabase/supabase-js');
 const rateLimit = require('express-rate-limit');
 
 const app = express();
+// Fix Render proxy
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3000;
 
 // ============================================================
