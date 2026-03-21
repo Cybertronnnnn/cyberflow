@@ -284,6 +284,106 @@ app.get('/api/health', (req, res) => {
 });
 
 // ============================================================
+// CAMPAY — Token + Paiement
+// ============================================================
+const CAMPAY_BASE_URL = process.env.CAMPAY_ENV === 'live'
+  ? 'https://campay.net/api'
+  : 'https://demo.campay.net/api';
+
+async function getCampayToken() {
+  const res = await fetch(`${CAMPAY_BASE_URL}/token/`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      username: process.env.CAMPAY_USERNAME,
+      password: process.env.CAMPAY_PASSWORD
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error('Erreur token CamPay');
+  return data.token;
+}
+
+// ROUTE : POST /api/payment/initiate
+app.post('/api/payment/initiate', requireAuth, async (req, res) => {
+  const { phone, operator } = req.body;
+  if (!phone || !operator) return res.status(400).json({ error: 'Numéro et opérateur requis.' });
+  if (!['MTN', 'ORANGE'].includes(operator)) return res.status(400).json({ error: 'Opérateur invalide.' });
+
+  try {
+    const token = await getCampayToken();
+    const payRes = await fetch(`${CAMPAY_BASE_URL}/collect/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Token ${token}` },
+      body: JSON.stringify({
+        amount: '500',
+        currency: 'XAF',
+        from: phone,
+        description: 'CyberFlow Pro — Abonnement mensuel',
+        external_reference: req.user.id
+      })
+    });
+    const payData = await payRes.json();
+    if (!payRes.ok) return res.status(400).json({ error: payData.message || 'Erreur paiement.' });
+
+    await sb.from('payments').insert({
+      user_id: req.user.id,
+      reference: payData.reference,
+      operator, phone,
+      amount: 500,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    });
+
+    res.json({ success: true, reference: payData.reference, message: 'Confirmez sur votre téléphone.' });
+  } catch (err) {
+    console.error('CamPay erreur:', err.message);
+    res.status(500).json({ error: 'Erreur paiement. Réessayez.' });
+  }
+});
+
+// ROUTE : POST /api/payment/verify
+app.post('/api/payment/verify', requireAuth, async (req, res) => {
+  const { reference } = req.body;
+  if (!reference) return res.status(400).json({ error: 'Référence manquante.' });
+
+  try {
+    const token = await getCampayToken();
+    const verRes = await fetch(`${CAMPAY_BASE_URL}/transaction/${reference}/`, {
+      headers: { 'Authorization': `Token ${token}` }
+    });
+    const data = await verRes.json();
+
+    if (data.status === 'SUCCESSFUL') {
+      await sb.from('profiles').update({ plan: 'pro' }).eq('id', req.user.id);
+      await sb.from('payments').update({ status: 'success' }).eq('reference', reference);
+      return res.json({ success: true, status: 'SUCCESSFUL', message: 'Paiement confirmé ! Vous êtes Pro.' });
+    }
+    if (data.status === 'FAILED') {
+      await sb.from('payments').update({ status: 'failed' }).eq('reference', reference);
+      return res.json({ success: false, status: 'FAILED', message: 'Paiement échoué. Réessayez.' });
+    }
+    res.json({ success: false, status: 'PENDING', message: 'En attente de confirmation...' });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur vérification.' });
+  }
+});
+
+// ROUTE : POST /api/payment/webhook
+app.post('/api/payment/webhook', async (req, res) => {
+  const { reference, status, external_reference } = req.body;
+  try {
+    if (status === 'SUCCESSFUL' && external_reference) {
+      await sb.from('profiles').update({ plan: 'pro' }).eq('id', external_reference);
+      await sb.from('payments').update({ status: 'success' }).eq('reference', reference);
+    }
+    res.json({ received: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur webhook.' });
+  }
+});
+
+// ============================================================
 // CATCH-ALL
 // ============================================================
 app.get('*', (req, res) => {
@@ -300,20 +400,12 @@ function buildPrompt(topic, platform, tone) {
     mysterieux: 'mystérieux et intrigant, qui crée de la curiosité et du suspense',
     agressif:   'agressif et direct, sans fioritures, qui secoue violemment le lecteur'
   };
-
   const platformMap = {
     facebook:  `un post Facebook viral (accroche puissante 1ère ligne, contenu de valeur, emojis stratégiques, hashtags, call-to-action clair)`,
     tiktok:    `un script TikTok complet structuré ainsi:\n[HOOK - 3 secondes]\n[CONTENU - 30 à 60 secondes]\n[CALL TO ACTION final]`,
     instagram: `une caption Instagram virale (accroche forte, storytelling, emojis, 20 hashtags optimisés, CTA engageant)`
   };
-
-  return `Génère ${platformMap[platform]} sur le sujet : "${topic}".
-
-Ton : ${toneMap[tone]}.
-Style : Shadow Marketing — influence, impact, authenticité sombre, psychologie de persuasion.
-Langue : Français.
-
-Génère directement le contenu prêt à publier, sans introduction.`;
+  return `Génère ${platformMap[platform]} sur le sujet : "${topic}".\n\nTon : ${toneMap[tone]}.\nStyle : Shadow Marketing — influence, impact, authenticité sombre.\nLangue : Français.\n\nGénère directement le contenu prêt à publier, sans introduction.`;
 }
 
 // ============================================================
@@ -322,5 +414,6 @@ Génère directement le contenu prêt à publier, sans introduction.`;
 app.listen(PORT, () => {
   console.log(`\n⚡ CyberFlow — En ligne sur le port ${PORT}`);
   console.log(`🤖 Groq API : ${process.env.GROQ_API_KEY ? '✅ Configurée' : '❌ MANQUANTE'}`);
-  console.log(`🗄️  Supabase URL : ${process.env.SUPABASE_URL ? '✅ Configurée' : '❌ MANQUANTE'}\n`);
+  console.log(`💳 CamPay : ${process.env.CAMPAY_USERNAME ? '✅ Configuré' : '❌ MANQUANT'}`);
+  console.log(`🗄️  Supabase : ${process.env.SUPABASE_URL ? '✅ Configurée' : '❌ MANQUANTE'}\n`);
 });

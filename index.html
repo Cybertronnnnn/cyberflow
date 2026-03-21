@@ -1,0 +1,2281 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CyberFlow — Contenu Viral Propulsé par l'IA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --black: #020202;
+      --gold: #C9A84C;
+      --gold-light: #F0C060;
+      --gold-dark: #8B6914;
+      --white: #F5F0E8;
+      --gray: #1A1A1A;
+      --gray2: #2A2320;
+      --red: #CC2200;
+      --border: rgba(201,168,76,0.25);
+      --glow: 0 0 20px rgba(201,168,76,0.3);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* NOISE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.4;
+    }
+
+    /* SCANLINES */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 40px;
+      background: rgba(2,2,2,0.9);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 4px;
+      color: var(--gold);
+      text-shadow: var(--glow);
+    }
+
+    .nav-logo span { color: var(--white); }
+
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+
+    .nav-links a {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.6);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--gold); }
+
+    .nav-cta {
+      background: var(--gold);
+      color: var(--black) !important;
+      padding: 8px 20px;
+      border: none;
+      font-weight: 700 !important;
+      cursor: pointer;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+      transition: background 0.2s, box-shadow 0.2s !important;
+    }
+
+    .nav-cta:hover { background: var(--gold-light) !important; box-shadow: var(--glow) !important; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 40px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201,168,76,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201,168,76,0.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      padding: 6px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 32px;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .hero-badge::before { content: '▶'; font-size: 8px; }
+
+    .hero-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(64px, 12vw, 140px);
+      line-height: 0.9;
+      letter-spacing: 6px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.8s 0.1s ease both;
+    }
+
+    .hero-title .gold { color: var(--gold); text-shadow: 0 0 40px rgba(201,168,76,0.4); }
+
+    .hero-sub {
+      font-size: 18px;
+      font-weight: 500;
+      color: rgba(245,240,232,0.6);
+      max-width: 560px;
+      line-height: 1.6;
+      margin-bottom: 48px;
+      animation: fadeUp 0.8s 0.2s ease both;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      padding: 14px 36px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary:hover { background: var(--gold-light); box-shadow: 0 0 30px rgba(201,168,76,0.4); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold);
+      padding: 14px 36px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-secondary:hover { background: rgba(201,168,76,0.1); transform: translateY(-1px); }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 72px;
+      animation: fadeUp 0.8s 0.4s ease both;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 42px;
+      color: var(--gold);
+      line-height: 1;
+      letter-spacing: 2px;
+    }
+    .stat-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.4);
+      margin-top: 4px;
+    }
+
+    /* SECTION */
+    section { padding: 100px 40px; max-width: 1200px; margin: 0 auto; }
+
+    .section-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-tag::before { content: ''; display: block; width: 32px; height: 1px; background: var(--gold); }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(36px, 5vw, 64px);
+      letter-spacing: 3px;
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .section-title .gold { color: var(--gold); }
+
+    .section-desc {
+      font-size: 16px;
+      color: rgba(245,240,232,0.55);
+      max-width: 520px;
+      line-height: 1.7;
+      margin-bottom: 60px;
+    }
+
+    /* FEATURES */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+    }
+
+    .feature-card {
+      background: var(--gray);
+      padding: 36px;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .feature-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 22px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: rgba(245,240,232,0.55);
+      line-height: 1.7;
+    }
+
+    /* APP SECTION */
+    .app-section {
+      background: var(--gray);
+      border: 1px solid var(--border);
+      padding: 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-section::before {
+      content: 'CYBERFLOW';
+      position: absolute;
+      right: -20px; top: 50%;
+      transform: translateY(-50%) rotate(90deg);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 120px;
+      color: rgba(201,168,76,0.04);
+      letter-spacing: 10px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    /* AUTH MODAL */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--gray);
+      border: 1px solid var(--border);
+      width: 100%;
+      max-width: 440px;
+      padding: 48px;
+      position: relative;
+      animation: scaleIn 0.3s ease;
+    }
+
+    .modal::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 20px;
+      background: none;
+      border: none;
+      color: rgba(245,240,232,0.4);
+      font-size: 20px;
+      cursor: pointer;
+      font-family: 'Share Tech Mono', monospace;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover { color: var(--gold); }
+
+    .modal-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 32px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .modal-sub {
+      font-size: 13px;
+      color: rgba(245,240,232,0.4);
+      margin-bottom: 32px;
+      letter-spacing: 1px;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 32px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-tab {
+      flex: 1;
+      background: none;
+      border: none;
+      color: rgba(245,240,232,0.4);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 12px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .modal-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+    .form-group { margin-bottom: 20px; }
+
+    .form-label {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.5);
+      margin-bottom: 8px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 12px 16px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus { border-color: var(--gold); }
+    .form-input::placeholder { color: rgba(245,240,232,0.2); }
+
+    .form-submit {
+      width: 100%;
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      padding: 14px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+
+    .form-submit:hover { background: var(--gold-light); }
+    .form-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .form-msg {
+      margin-top: 16px;
+      font-size: 13px;
+      text-align: center;
+      min-height: 20px;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .form-msg.success { color: #4CAF50; }
+    .form-msg.error { color: var(--red); }
+
+    /* DASHBOARD */
+    .dashboard {
+      display: none;
+      min-height: 100vh;
+      padding-top: 80px;
+    }
+
+    .dashboard.active { display: block; }
+
+    .dash-header {
+      background: var(--gray);
+      border-bottom: 1px solid var(--border);
+      padding: 32px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .dash-greeting {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 3px;
+    }
+
+    .dash-greeting span { color: var(--gold); }
+
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .plan-badge.free { border: 1px solid rgba(245,240,232,0.2); color: rgba(245,240,232,0.5); }
+    .plan-badge.pro { border: 1px solid var(--gold); color: var(--gold); background: rgba(201,168,76,0.1); }
+
+    .dash-body { padding: 40px; max-width: 1100px; margin: 0 auto; }
+
+    .dash-quota {
+      background: var(--gray2);
+      border: 1px solid var(--border);
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .quota-text { font-size: 13px; color: rgba(245,240,232,0.5); letter-spacing: 1px; }
+    .quota-count { font-family: 'Bebas Neue', sans-serif; font-size: 28px; color: var(--gold); letter-spacing: 2px; }
+
+    .quota-bar-wrap { flex: 1; min-width: 160px; height: 4px; background: rgba(255,255,255,0.1); }
+    .quota-bar { height: 100%; background: var(--gold); transition: width 0.4s; }
+
+    /* GENERATOR */
+    .generator {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+
+    @media (max-width: 768px) { .generator { grid-template-columns: 1fr; } }
+
+    .gen-panel {
+      background: var(--gray);
+      border: 1px solid var(--border);
+      padding: 36px;
+    }
+
+    .gen-panel-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .gen-panel-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .platform-select {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .platform-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: rgba(245,240,232,0.5);
+      padding: 8px 16px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+    }
+
+    .platform-btn.active, .platform-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.08);
+    }
+
+    .tone-select {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .tone-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: rgba(245,240,232,0.5);
+      padding: 6px 14px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tone-btn.active, .tone-btn:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+      background: rgba(201,168,76,0.08);
+    }
+
+    .gen-textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 16px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      resize: vertical;
+      min-height: 120px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 20px;
+      line-height: 1.6;
+    }
+
+    .gen-textarea:focus { border-color: var(--gold); }
+    .gen-textarea::placeholder { color: rgba(245,240,232,0.2); }
+
+    .gen-btn {
+      width: 100%;
+      background: var(--gold);
+      color: var(--black);
+      border: none;
+      padding: 16px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      clip-path: polygon(16px 0%, 100% 0%, calc(100% - 16px) 100%, 0% 100%);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .gen-btn:hover { background: var(--gold-light); box-shadow: 0 0 30px rgba(201,168,76,0.3); }
+    .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* OUTPUT */
+    .output-area {
+      min-height: 300px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--border);
+      padding: 24px;
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--white);
+      white-space: pre-wrap;
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .output-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      color: rgba(245,240,232,0.15);
+    }
+
+    .output-placeholder-icon { font-size: 40px; opacity: 0.3; }
+    .output-placeholder-text { font-family: 'Share Tech Mono', monospace; font-size: 12px; letter-spacing: 2px; }
+
+    .output-actions { display: flex; gap: 12px; }
+
+    .output-btn {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: rgba(245,240,232,0.6);
+      padding: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+
+    .output-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .output-btn.copied { border-color: #4CAF50; color: #4CAF50; }
+
+    /* TYPING ANIMATION */
+    .typing-cursor::after {
+      content: '▋';
+      animation: blink 0.7s infinite;
+      color: var(--gold);
+    }
+
+    /* PRICING */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+    }
+
+    .pricing-card {
+      background: var(--gray);
+      border: 1px solid var(--border);
+      padding: 48px 36px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--gold);
+    }
+
+    .pricing-card.featured::before {
+      content: 'POPULAIRE';
+      position: absolute;
+      top: 20px; right: -28px;
+      background: var(--gold);
+      color: var(--black);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      padding: 4px 40px;
+      transform: rotate(45deg);
+    }
+
+    .pricing-plan {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 20px;
+    }
+
+    .pricing-price {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 64px;
+      letter-spacing: 2px;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .pricing-price span { font-size: 24px; color: rgba(245,240,232,0.4); }
+
+    .pricing-period {
+      font-size: 13px;
+      color: rgba(245,240,232,0.4);
+      margin-bottom: 32px;
+      letter-spacing: 1px;
+    }
+
+    .pricing-divider { height: 1px; background: var(--border); margin-bottom: 28px; }
+
+    .pricing-features { list-style: none; margin-bottom: 36px; }
+
+    .pricing-features li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      color: rgba(245,240,232,0.7);
+      margin-bottom: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .pricing-features li::before { content: '▶'; font-size: 8px; color: var(--gold); flex-shrink: 0; }
+
+    /* UPGRADE WALL */
+    .upgrade-wall {
+      display: none;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid var(--gold);
+      padding: 36px;
+      text-align: center;
+      margin-top: 24px;
+      backdrop-filter: blur(4px);
+    }
+
+    .upgrade-wall.show { display: block; }
+
+    .upgrade-wall-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 28px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .upgrade-wall-sub {
+      font-size: 14px;
+      color: rgba(245,240,232,0.5);
+      margin-bottom: 24px;
+    }
+
+    /* HISTORY */
+    .history-section { margin-top: 48px; }
+
+    .history-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 20px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .history-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .history-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .history-item {
+      background: var(--gray2);
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .history-item:hover { border-color: var(--gold); }
+
+    .history-item-text {
+      font-size: 14px;
+      color: rgba(245,240,232,0.7);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-item-meta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: rgba(245,240,232,0.3);
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    .history-item-platform {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--gold);
+      letter-spacing: 1px;
+      border: 1px solid var(--gold-dark);
+      padding: 2px 8px;
+      white-space: nowrap;
+    }
+
+    /* LANDING sections */
+    .landing { display: block; }
+    .landing.hidden { display: none; }
+
+    /* SEPARATOR */
+    .sep {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 0;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 24px;
+      letter-spacing: 4px;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .footer-text {
+      font-size: 12px;
+      color: rgba(245,240,232,0.3);
+      letter-spacing: 1px;
+    }
+
+    /* LOADING */
+    .loading-dots span {
+      animation: blink 1s infinite;
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--gold);
+      font-size: 24px;
+    }
+
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(201,168,76,0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(201,168,76,0); }
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links { gap: 16px; }
+      section { padding: 60px 20px; }
+      .app-section { padding: 32px 20px; }
+      .dash-body { padding: 20px; }
+      .gen-panel { padding: 24px; }
+      .dash-header { padding: 24px 20px; }
+      .modal { padding: 32px 24px; }
+    }
+
+    /* GLITCH */
+    .glitch {
+      position: relative;
+    }
+
+    .glitch::before {
+      content: attr(data-text);
+      position: absolute;
+      left: 2px;
+      text-shadow: -1px 0 var(--gold);
+      top: 0;
+      color: var(--white);
+      overflow: hidden;
+      clip: rect(0, 900px, 0, 0);
+      animation: glitch-1 4s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-1 {
+      0% { clip: rect(42px, 9999px, 44px, 0); }
+      20% { clip: rect(12px, 9999px, 59px, 0); }
+      40% { clip: rect(71px, 9999px, 73px, 0); }
+      60% { clip: rect(0px, 9999px, 0px, 0); }
+      80% { clip: rect(26px, 9999px, 55px, 0); }
+      100% { clip: rect(0px, 9999px, 0px, 0); }
+    }
+
+    /* ============================================================
+       PAYMENT MODAL
+    ============================================================ */
+    .payment-modal { max-width: 480px; }
+
+    .operator-select { display: flex; gap: 12px; margin-bottom: 20px; }
+
+    .operator-btn {
+      flex: 1; padding: 16px; border: 1px solid var(--border);
+      background: transparent; color: var(--white); cursor: pointer;
+      font-family: "Rajdhani", sans-serif; font-weight: 700;
+      font-size: 14px; letter-spacing: 1px; transition: all 0.2s;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .operator-btn.active.mtn { border-color: #FFD700; background: rgba(255,215,0,0.1); color: #FFD700; }
+    .operator-btn.active.orange { border-color: #FF6600; background: rgba(255,102,0,0.1); color: #FF6600; }
+    .operator-btn:hover { border-color: var(--gold); }
+
+    .payment-status {
+      text-align: center; padding: 20px;
+      font-family: "Share Tech Mono", monospace; font-size: 13px;
+      letter-spacing: 1px; min-height: 60px;
+    }
+    .payment-status.pending { color: #FFD700; }
+    .payment-status.success { color: #4CAF50; }
+    .payment-status.error { color: var(--red); }
+
+    .verify-btn {
+      width: 100%; background: transparent; border: 1px solid var(--gold);
+      color: var(--gold); padding: 12px; font-family: "Rajdhani", sans-serif;
+      font-weight: 700; font-size: 14px; letter-spacing: 2px; cursor: pointer;
+      margin-top: 12px; transition: all 0.2s; display: none;
+    }
+    .verify-btn:hover { background: rgba(201,168,76,0.1); }
+    .verify-btn.show { display: block; }
+
+    /* ============================================================
+       IMAGE GENERATOR
+    ============================================================ */
+    .image-section { margin-top: 48px; }
+
+    .image-title {
+      font-family: "Bebas Neue", sans-serif; font-size: 20px;
+      letter-spacing: 3px; color: var(--gold); margin-bottom: 20px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .image-title::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    .image-generator {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 32px;
+    }
+    @media (max-width: 768px) { .image-generator { grid-template-columns: 1fr; } }
+
+    .img-panel {
+      background: var(--gray); border: 1px solid var(--border); padding: 28px;
+    }
+
+    .img-panel-title {
+      font-family: "Bebas Neue", sans-serif; font-size: 18px;
+      letter-spacing: 2px; color: var(--gold); margin-bottom: 20px;
+    }
+
+    .style-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;
+    }
+
+    .style-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: rgba(245,240,232,0.5); padding: 10px 8px;
+      font-family: "Share Tech Mono", monospace; font-size: 10px;
+      letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+      text-align: center;
+    }
+    .style-btn.active, .style-btn:hover {
+      border-color: var(--gold); color: var(--gold);
+      background: rgba(201,168,76,0.08);
+    }
+
+    .canvas-wrap {
+      position: relative; background: #000;
+      border: 1px solid var(--border); margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 300px;
+    }
+
+    #imageCanvas { max-width: 100%; display: block; }
+
+    .canvas-placeholder {
+      position: absolute; inset: 0; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      color: rgba(245,240,232,0.15); gap: 12px;
+    }
+
+    .img-actions { display: flex; gap: 12px; }
+
+    .img-btn {
+      flex: 1; background: transparent; border: 1px solid var(--border);
+      color: rgba(245,240,232,0.6); padding: 10px;
+      font-family: "Rajdhani", sans-serif; font-weight: 600;
+      font-size: 13px; letter-spacing: 1px; cursor: pointer;
+      transition: all 0.2s; text-transform: uppercase;
+    }
+    .img-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .img-btn.primary { background: var(--gold); color: var(--black); border-color: var(--gold); }
+    .img-btn.primary:hover { background: var(--gold-light); }
+
+    .format-select { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .format-btn {
+      background: transparent; border: 1px solid var(--border);
+      color: rgba(245,240,232,0.5); padding: 6px 12px;
+      font-family: "Share Tech Mono", monospace; font-size: 10px;
+      letter-spacing: 1px; cursor: pointer; transition: all 0.2s;
+    }
+    .format-btn.active, .format-btn:hover {
+      border-color: var(--gold); color: var(--gold);
+      background: rgba(201,168,76,0.08);
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">CYBER<span>FLOW</span></div>
+  <div class="nav-links" id="navLinks">
+    <a href="#features">Fonctionnalités</a>
+    <a href="#pricing">Tarifs</a>
+    <a href="#" onclick="openModal('login')" id="loginBtn">Connexion</a>
+    <a href="#" class="nav-cta" onclick="openModal('signup')" id="signupBtn">Commencer</a>
+    <span id="userEmailNav" style="display:none;font-size:12px;letter-spacing:1px;color:rgba(245,240,232,0.5);font-family:'Share Tech Mono',monospace;"></span>
+    <a href="#" id="logoutBtn" style="display:none;" onclick="logout()">Déconnexion</a>
+  </div>
+</nav>
+
+<!-- LANDING PAGE -->
+<div class="landing" id="landingPage">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-badge">SHADOW MARKETING × IA GÉNÉRATIVE</div>
+    <h1 class="hero-title glitch" data-text="CRÉEZ DU CONTENU">
+      CRÉEZ DU CONTENU<br><span class="gold">QUI EXPLOSE</span>
+    </h1>
+    <p class="hero-sub">CyberFlow génère des posts Facebook et scripts TikTok viraux en quelques secondes. L'IA au service de votre influence.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary" onclick="openModal('signup')">Essai Gratuit</a>
+      <a href="#features" class="btn-secondary">Voir les fonctionnalités</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-num">10K+</div>
+        <div class="stat-label">Contenus générés</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">98%</div>
+        <div class="stat-label">Taux de satisfaction</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">3X</div>
+        <div class="stat-label">Engagement moyen</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="section-tag">Fonctionnalités</div>
+    <h2 class="section-title">TOUT CE DONT VOUS<br><span class="gold">AVEZ BESOIN</span></h2>
+    <p class="section-desc">Des outils puissants pour créer du contenu viral adapté à chaque plateforme.</p>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">Posts Facebook Viraux</div>
+        <p class="feature-desc">Générez des posts engageants optimisés pour l'algorithme Facebook avec accroches percutantes et calls-to-action.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎬</span>
+        <div class="feature-title">Scripts TikTok</div>
+        <p class="feature-desc">Scripts complets avec hook, contenu et CTA pensés pour maximiser les vues et les partages sur TikTok.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎯</span>
+        <div class="feature-title">Tons Personnalisés</div>
+        <p class="feature-desc">Agressif, inspirant, mystérieux ou persuasif — adaptez le ton à votre audience et votre niche.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <div class="feature-title">Historique Complet</div>
+        <p class="feature-desc">Retrouvez tous vos contenus générés, réutilisez-les et construisez votre bibliothèque de contenu.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔥</span>
+        <div class="feature-title">Hashtags Optimisés</div>
+        <p class="feature-desc">Hashtags générés automatiquement selon votre niche pour maximiser votre portée organique.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🖤</span>
+        <div class="feature-title">Style Shadow Marketing</div>
+        <p class="feature-desc">Contenu calibré pour les méthodes Shadow Marketing — influence, persuasion, impact maximal.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="sep"></div>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="section-tag">Tarifs</div>
+    <h2 class="section-title">CHOISISSEZ VOTRE<br><span class="gold">NIVEAU</span></h2>
+    <p class="section-desc">Commencez gratuitement, passez Pro quand vous êtes prêt à dominer.</p>
+    <div class="pricing-grid">
+      <div class="pricing-card">
+        <div class="pricing-plan">// PLAN FREE</div>
+        <div class="pricing-price">0<span>€</span></div>
+        <div class="pricing-period">pour toujours</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li>3 générations par jour</li>
+          <li>Facebook + TikTok</li>
+          <li>2 tons disponibles</li>
+          <li>Historique 7 jours</li>
+        </ul>
+        <a href="#" class="btn-secondary" style="width:100%;text-align:center;display:block;" onclick="openModal('signup')">Commencer Gratuitement</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-plan">// PLAN PRO</div>
+        <div class="pricing-price">9<span>€</span></div>
+        <div class="pricing-period">par mois</div>
+        <div class="pricing-divider"></div>
+        <ul class="pricing-features">
+          <li>Générations illimitées</li>
+          <li>Facebook + TikTok + Instagram</li>
+          <li>Tous les tons disponibles</li>
+          <li>Historique illimité</li>
+          <li>Priorité de génération</li>
+          <li>Support dédié</li>
+        </ul>
+        <a href="#" class="btn-primary" style="width:100%;text-align:center;display:block;" onclick="openPaymentModal()">Passer Pro — 500 FCFA</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">CYBER<span style="color:var(--white)">FLOW</span></div>
+    <p class="footer-text">© 2026 CyberFlow — Shadow Marketing × IA — Tous droits réservés</p>
+  </footer>
+
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="dash-header">
+    <div>
+      <div class="dash-greeting">BIENVENUE, <span id="dashUsername">USER</span></div>
+      <div style="font-size:12px;color:rgba(245,240,232,0.3);letter-spacing:1px;margin-top:4px;font-family:'Share Tech Mono',monospace;">CYBERFLOW DASHBOARD</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="plan-badge free" id="planBadge">▶ FREE</div>
+      <button class="btn-secondary" style="padding:8px 20px;font-size:13px;" onclick="logout()">DÉCONNEXION</button>
+    </div>
+  </div>
+
+  <div class="dash-body">
+
+    <!-- QUOTA -->
+    <div class="dash-quota">
+      <div>
+        <div class="quota-text">GÉNÉRATIONS AUJOURD'HUI</div>
+        <div class="quota-count" id="quotaCount">0 / 3</div>
+      </div>
+      <div class="quota-bar-wrap">
+        <div class="quota-bar" id="quotaBar" style="width:0%"></div>
+      </div>
+      <button class="btn-primary" style="padding:10px 24px;font-size:13px;" id="upgradeHeaderBtn" onclick="openPaymentModal()">⚡ PASSER PRO</button>
+    </div>
+
+    <!-- GENERATOR -->
+    <div class="generator">
+
+      <!-- LEFT: INPUT -->
+      <div class="gen-panel">
+        <div class="gen-panel-title">PARAMÈTRES</div>
+
+        <div style="margin-bottom:16px;">
+          <div class="form-label">Plateforme</div>
+          <div class="platform-select">
+            <button class="platform-btn active" onclick="selectPlatform(this,'facebook')">📘 Facebook</button>
+            <button class="platform-btn" onclick="selectPlatform(this,'tiktok')">🎵 TikTok</button>
+            <button class="platform-btn pro-only" onclick="selectPlatform(this,'instagram')">📸 Instagram <span style="font-size:9px;color:var(--gold);letter-spacing:1px;">PRO</span></button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px;">
+          <div class="form-label">Ton du contenu</div>
+          <div class="tone-select">
+            <button class="tone-btn active" onclick="selectTone(this,'viral')">🔥 VIRAL</button>
+            <button class="tone-btn" onclick="selectTone(this,'persuasif')">💎 PERSUASIF</button>
+            <button class="tone-btn pro-only" onclick="selectTone(this,'mysterieux')">🌑 MYSTÉRIEUX</button>
+            <button class="tone-btn pro-only" onclick="selectTone(this,'agressif')">⚡ AGRESSIF</button>
+          </div>
+        </div>
+
+        <div class="form-label">Sujet / Produit / Niche</div>
+        <textarea class="gen-textarea" id="topicInput" placeholder="Ex: Formation TikTok, vendre en ligne, motivation, shadow marketing..."></textarea>
+
+        <button class="gen-btn" id="generateBtn" onclick="generateContent()">
+          <span>⚡</span> GÉNÉRER LE CONTENU
+        </button>
+
+        <div class="upgrade-wall" id="upgradeWall">
+          <div class="upgrade-wall-title">LIMITE ATTEINTE</div>
+          <p class="upgrade-wall-sub">Vous avez utilisé vos 3 générations gratuites aujourd'hui. Passez Pro pour un accès illimité.</p>
+          <button class="btn-primary" onclick="openPaymentModal()">PASSER PRO — 500 FCFA</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: OUTPUT -->
+      <div class="gen-panel">
+        <div class="gen-panel-title">RÉSULTAT</div>
+        <div class="output-area" id="outputArea">
+          <div class="output-placeholder" id="outputPlaceholder">
+            <div class="output-placeholder-icon">⚡</div>
+            <div class="output-placeholder-text">EN ATTENTE DE GÉNÉRATION</div>
+          </div>
+          <div id="outputText" style="display:none;"></div>
+        </div>
+        <div class="output-actions">
+          <button class="output-btn" id="copyBtn" onclick="copyContent()">📋 COPIER</button>
+          <button class="output-btn" onclick="regenerate()">🔄 RÉGÉNÉRER</button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- IMAGE GENERATOR -->
+    <div class="image-section">
+      <div class="image-title">GÉNÉRATEUR D'IMAGES</div>
+      <div class="image-generator">
+
+        <!-- LEFT: CONTROLS -->
+        <div class="img-panel">
+          <div class="img-panel-title">⚙️ PARAMÈTRES</div>
+
+          <div class="form-label">Style visuel</div>
+          <div class="style-grid">
+            <button class="style-btn active" onclick="selectStyle(this,'shadow')">🖤 SHADOW</button>
+            <button class="style-btn" onclick="selectStyle(this,'gold')">✨ GOLD LUXURY</button>
+            <button class="style-btn" onclick="selectStyle(this,'fire')">🔥 FIRE</button>
+            <button class="style-btn" onclick="selectStyle(this,'neon')">💜 NEON CYBER</button>
+            <button class="style-btn" onclick="selectStyle(this,'minimal')">⬜ MINIMAL</button>
+            <button class="style-btn" onclick="selectStyle(this,'matrix')">💚 MATRIX</button>
+            <button class="style-btn" onclick="selectStyle(this,'sunset')">🌅 SUNSET</button>
+            <button class="style-btn" onclick="selectStyle(this,'ice')">🧊 ICE COLD</button>
+          </div>
+
+          <div class="form-label">Format</div>
+          <div class="format-select">
+            <button class="format-btn active" onclick="selectFormat(this,'square')">◼ CARRÉ</button>
+            <button class="format-btn" onclick="selectFormat(this,'portrait')">▬ PORTRAIT</button>
+            <button class="format-btn" onclick="selectFormat(this,'landscape')">▭ PAYSAGE</button>
+            <button class="format-btn" onclick="selectFormat(this,'story')">📱 STORY</button>
+          </div>
+
+          <div class="form-label" style="margin-bottom:8px;">Citation principale</div>
+          <textarea class="gen-textarea" id="imgQuote" placeholder="Ex: L'argent ne dort jamais. Toi non plus." style="min-height:80px;margin-bottom:12px;"></textarea>
+
+          <div class="form-label" style="margin-bottom:8px;">Sous-titre (optionnel)</div>
+          <input type="text" class="form-input" id="imgSubtitle" placeholder="Ex: Shadow Marketing © 2026" style="margin-bottom:16px;" />
+
+          <button class="img-btn primary" onclick="generateImage()" style="width:100%;padding:14px;font-size:15px;letter-spacing:2px;font-family:'Bebas Neue',sans-serif;">
+            ⚡ GÉNÉRER L'IMAGE
+          </button>
+        </div>
+
+        <!-- RIGHT: PREVIEW -->
+        <div class="img-panel">
+          <div class="img-panel-title">🖼️ APERÇU</div>
+          <div class="canvas-wrap">
+            <div class="canvas-placeholder" id="canvasPlaceholder">
+              <div style="font-size:40px;opacity:0.3;">🖼️</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;">EN ATTENTE</div>
+            </div>
+            <canvas id="imageCanvas"></canvas>
+          </div>
+          <div class="img-actions">
+            <button class="img-btn" onclick="downloadImage()">⬇️ TÉLÉCHARGER</button>
+            <button class="img-btn" onclick="generateImage()">🔄 RÉGÉNÉRER</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-section">
+      <div class="history-title">HISTORIQUE</div>
+      <div class="history-list" id="historyList">
+        <div style="text-align:center;padding:32px;font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:2px;color:rgba(245,240,232,0.2);">
+          AUCUN CONTENU GÉNÉRÉ
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- PAYMENT MODAL -->
+<div class="modal-overlay" id="paymentOverlay" onclick="closePaymentOutside(event)">
+  <div class="modal payment-modal">
+    <button class="modal-close" onclick="closePaymentModal()">✕</button>
+    <div class="modal-title">PASSER PRO</div>
+    <div class="modal-sub">ACCÈS ILLIMITÉ — 500 FCFA/MOIS</div>
+
+    <div style="margin-bottom:20px;">
+      <div class="form-label">Choisir l'opérateur</div>
+      <div class="operator-select">
+        <button class="operator-btn mtn" id="btnMTN" onclick="selectOperator('MTN')">
+          <span style="font-size:24px;">📱</span>
+          MTN Money
+        </button>
+        <button class="operator-btn orange" id="btnOrange" onclick="selectOperator('ORANGE')">
+          <span style="font-size:24px;">📱</span>
+          Orange Money
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Numéro Mobile Money</label>
+      <input type="tel" class="form-input" id="payPhone" placeholder="Ex: 6XXXXXXXX" />
+    </div>
+
+    <button class="form-submit" id="paySubmit" onclick="initiatePayment()">
+      PAYER 500 FCFA
+    </button>
+
+    <div class="payment-status" id="payStatus"></div>
+
+    <button class="verify-btn" id="verifyBtn" onclick="verifyPayment()">
+      ✅ J'AI CONFIRMÉ LE PAIEMENT
+    </button>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modalTitle">CONNEXION</div>
+    <div class="modal-sub" id="modalSub">ACCÉDEZ À VOTRE COMPTE CYBERFLOW</div>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin" onclick="switchTab('login')">CONNEXION</button>
+      <button class="modal-tab" id="tabSignup" onclick="switchTab('signup')">INSCRIPTION</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="formLogin">
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="loginEmail" placeholder="votre@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" />
+      </div>
+      <button class="form-submit" id="loginSubmit" onclick="login()">SE CONNECTER</button>
+      <div class="form-msg" id="loginMsg"></div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="formSignup" style="display:none;">
+      <div class="form-group">
+        <label class="form-label">Prénom / Pseudo</label>
+        <input type="text" class="form-input" id="signupName" placeholder="ShadowUser" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" id="signupEmail" placeholder="votre@email.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Mot de passe</label>
+        <input type="password" class="form-input" id="signupPassword" placeholder="Min. 8 caractères" />
+      </div>
+      <button class="form-submit" id="signupSubmit" onclick="signup()">CRÉER MON COMPTE</button>
+      <div class="form-msg" id="signupMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// Remplace par tes vraies valeurs
+// ============================================================
+const SUPABASE_URL = 'VOTRE_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'VOTRE_SUPABASE_ANON_KEY';
+const BACKEND_URL = ''; // Même serveur — laisse vide sur Render
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// STATE
+// ============================================================
+let currentUser = null;
+let currentProfile = null;
+let currentSession = null;
+let selectedPlatform = 'facebook';
+let selectedTone = 'viral';
+let generationHistory = [];
+let todayCount = 0;
+const FREE_LIMIT = 3;
+
+// ============================================================
+// AUTH
+// ============================================================
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    currentSession = session;
+    await loadProfile();
+    showDashboard();
+  }
+}
+
+async function login() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const btn = document.getElementById('loginSubmit');
+  const msg = document.getElementById('loginMsg');
+
+  if (!email || !password) { showMsg('loginMsg', 'Remplissez tous les champs.', 'error'); return; }
+
+  btn.disabled = true; btn.textContent = 'CONNEXION...';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    showMsg('loginMsg', 'Email ou mot de passe incorrect.', 'error');
+    btn.disabled = false; btn.textContent = 'SE CONNECTER';
+    return;
+  }
+
+  currentUser = data.user;
+  currentSession = data.session;
+  await loadProfile();
+  closeModal();
+  showDashboard();
+  btn.disabled = false; btn.textContent = 'SE CONNECTER';
+}
+
+async function signup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const btn = document.getElementById('signupSubmit');
+
+  if (!name || !email || !password) { showMsg('signupMsg', 'Remplissez tous les champs.', 'error'); return; }
+  if (password.length < 8) { showMsg('signupMsg', 'Mot de passe trop court (min. 8 caractères).', 'error'); return; }
+
+  btn.disabled = true; btn.textContent = 'CRÉATION...';
+
+  const { data, error } = await sb.auth.signUp({ email, password, options: { data: { username: name } } });
+
+  if (error) {
+    showMsg('signupMsg', error.message, 'error');
+    btn.disabled = false; btn.textContent = 'CRÉER MON COMPTE';
+    return;
+  }
+
+  currentUser = data.user;
+  currentSession = data.session;
+
+  // Create profile via backend
+  await fetch(`${BACKEND_URL}/api/profile/create`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${currentSession?.access_token}`
+    },
+    body: JSON.stringify({ username: name, email })
+  });
+
+  await loadProfile();
+  closeModal();
+  showDashboard();
+  btn.disabled = false; btn.textContent = 'CRÉER MON COMPTE';
+}
+
+async function logout() {
+  await sb.auth.signOut();
+  currentUser = null;
+  currentProfile = null;
+  currentSession = null;
+  document.getElementById('dashboard').classList.remove('active');
+  document.getElementById('landingPage').classList.remove('hidden');
+  document.getElementById('loginBtn').style.display = '';
+  document.getElementById('signupBtn').style.display = '';
+  document.getElementById('logoutBtn').style.display = 'none';
+  document.getElementById('userEmailNav').style.display = 'none';
+}
+
+async function loadProfile() {
+  try {
+    // Récupère session fraîche si besoin
+    const { data: { session } } = await sb.auth.getSession();
+    currentSession = session;
+
+    const res = await fetch(`${BACKEND_URL}/api/me`, {
+      headers: { 'Authorization': `Bearer ${currentSession?.access_token}` }
+    });
+    const data = await res.json();
+
+    if (data.error) throw new Error(data.error);
+
+    currentProfile = {
+      username: data.username,
+      email: data.email,
+      plan: data.plan,
+      generations_today: data.quota.used
+    };
+    todayCount = data.quota.used;
+
+    // Historique
+    const histRes = await fetch(`${BACKEND_URL}/api/history?limit=10`, {
+      headers: { 'Authorization': `Bearer ${currentSession?.access_token}` }
+    });
+    const histData = await histRes.json();
+    generationHistory = histData.history || [];
+
+  } catch (err) {
+    currentProfile = { plan: 'free', generations_today: 0 };
+    todayCount = 0;
+    generationHistory = [];
+  }
+}
+
+// ============================================================
+// UI
+// ============================================================
+function showDashboard() {
+  document.getElementById('landingPage').classList.add('hidden');
+  document.getElementById('dashboard').classList.add('active');
+  document.getElementById('loginBtn').style.display = 'none';
+  document.getElementById('signupBtn').style.display = 'none';
+  document.getElementById('logoutBtn').style.display = '';
+
+  const username = currentProfile?.username || currentUser?.user_metadata?.username || 'USER';
+  document.getElementById('dashUsername').textContent = username.toUpperCase();
+  document.getElementById('userEmailNav').style.display = '';
+  document.getElementById('userEmailNav').textContent = currentUser?.email?.split('@')[0];
+
+  updateQuota();
+  renderHistory();
+  updatePlanUI();
+}
+
+function updatePlanUI() {
+  const isPro = currentProfile?.plan === 'pro';
+  const badge = document.getElementById('planBadge');
+  if (isPro) {
+    badge.textContent = '★ PRO';
+    badge.className = 'plan-badge pro';
+    document.getElementById('upgradeHeaderBtn').style.display = 'none';
+  } else {
+    badge.textContent = '▶ FREE';
+    badge.className = 'plan-badge free';
+  }
+
+  // Lock pro-only buttons for free users
+  document.querySelectorAll('.pro-only').forEach(btn => {
+    if (!isPro) {
+      btn.style.opacity = '0.4';
+      btn.onclick = () => { document.getElementById('upgradeWall').classList.add('show'); };
+    }
+  });
+}
+
+function updateQuota() {
+  const isPro = currentProfile?.plan === 'pro';
+  if (isPro) {
+    document.getElementById('quotaCount').textContent = '∞ illimité';
+    document.getElementById('quotaBar').style.width = '100%';
+    document.getElementById('quotaBar').style.background = 'var(--gold)';
+    document.getElementById('upgradeWall').classList.remove('show');
+    document.getElementById('generateBtn').disabled = false;
+  } else {
+    const pct = Math.min((todayCount / FREE_LIMIT) * 100, 100);
+    document.getElementById('quotaCount').textContent = `${todayCount} / ${FREE_LIMIT}`;
+    document.getElementById('quotaBar').style.width = pct + '%';
+    if (todayCount >= FREE_LIMIT) {
+      document.getElementById('upgradeWall').classList.add('show');
+      document.getElementById('generateBtn').disabled = true;
+    } else {
+      document.getElementById('upgradeWall').classList.remove('show');
+      document.getElementById('generateBtn').disabled = false;
+    }
+  }
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  if (!generationHistory.length) {
+    list.innerHTML = '<div style="text-align:center;padding:32px;font-family:\'Share Tech Mono\',monospace;font-size:11px;letter-spacing:2px;color:rgba(245,240,232,0.2);">AUCUN CONTENU GÉNÉRÉ</div>';
+    return;
+  }
+  list.innerHTML = generationHistory.map(h => `
+    <div class="history-item" onclick="loadHistory('${h.id}')">
+      <div class="history-item-text">${escHtml(h.content?.substring(0, 80))}...</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="history-item-platform">${h.platform?.toUpperCase()}</span>
+        <span class="history-item-meta">${formatDate(h.created_at)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadHistory(id) {
+  const item = generationHistory.find(h => h.id === id);
+  if (!item) return;
+  showOutput(item.content);
+}
+
+// ============================================================
+// GENERATION
+// ============================================================
+async function generateContent() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) { alert('Entrez un sujet / produit.'); return; }
+
+  const isPro = currentProfile?.plan === 'pro';
+  if (!isPro && todayCount >= FREE_LIMIT) {
+    document.getElementById('upgradeWall').classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading-dots"><span>.</span><span>.</span><span>.</span></div>';
+
+  document.getElementById('outputPlaceholder').style.display = 'none';
+  document.getElementById('outputText').style.display = 'block';
+  document.getElementById('outputText').textContent = '';
+  document.getElementById('outputText').classList.add('typing-cursor');
+
+  try {
+    // Récupère un token frais
+    const { data: { session } } = await sb.auth.getSession();
+    currentSession = session;
+
+    const response = await fetch(`${BACKEND_URL}/api/generate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentSession?.access_token}`
+      },
+      body: JSON.stringify({
+        topic,
+        platform: selectedPlatform,
+        tone: selectedTone
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      if (data.code === 'QUOTA_EXCEEDED') {
+        document.getElementById('upgradeWall').classList.add('show');
+        document.getElementById('outputText').textContent = '';
+        document.getElementById('outputPlaceholder').style.display = 'flex';
+      } else if (data.code === 'PRO_FEATURE') {
+        document.getElementById('outputText').textContent = '⚡ Fonctionnalité Pro — Passez à la version Pro pour accéder à cette option.';
+      } else {
+        document.getElementById('outputText').textContent = data.error || 'Erreur serveur.';
+      }
+      document.getElementById('outputText').classList.remove('typing-cursor');
+      btn.disabled = false;
+      btn.innerHTML = '<span>⚡</span> GÉNÉRER LE CONTENU';
+      return;
+    }
+
+    // Affichage avec effet de frappe
+    await typeText(data.content);
+
+    // Mise à jour du quota
+    todayCount = data.quota?.used || todayCount + 1;
+    if (currentProfile) currentProfile.generations_today = todayCount;
+
+    // Ajout à l'historique local
+    generationHistory.unshift({
+      id: data.generation_id,
+      platform: selectedPlatform,
+      tone: selectedTone,
+      topic,
+      content: data.content,
+      created_at: new Date().toISOString()
+    });
+    if (generationHistory.length > 10) generationHistory.pop();
+    renderHistory();
+    updateQuota();
+
+  } catch (err) {
+    document.getElementById('outputText').textContent = 'Erreur de connexion au serveur. Vérifiez que le backend est en ligne.';
+  }
+
+  document.getElementById('outputText').classList.remove('typing-cursor');
+  btn.disabled = false;
+  btn.innerHTML = '<span>⚡</span> GÉNÉRER LE CONTENU';
+  updateQuota();
+}
+
+async function regenerate() {
+  const topic = document.getElementById('topicInput').value.trim();
+  if (!topic) return;
+  await generateContent();
+}
+
+function buildPrompt(topic, platform, tone) {
+  const toneMap = {
+    viral: 'viral et accrocheur, avec des formules chocs',
+    persuasif: 'persuasif et convaincant, orienté vente et conversion',
+    mysterieux: 'mystérieux et intrigant, qui crée de la curiosité et du suspense',
+    agressif: 'agressif et direct, sans fioritures, qui secoue le lecteur'
+  };
+
+  const platformMap = {
+    facebook: `un post Facebook viral (avec accroche puissante, contenu de valeur, emojis, hashtags, et call-to-action clair)`,
+    tiktok: `un script TikTok complet (hook percutant 3 secondes, contenu 30-60 secondes, call-to-action final)`,
+    instagram: `une caption Instagram virale (accroche, storytelling, hashtags optimisés, CTA engageant)`
+  };
+
+  return `Génère ${platformMap[platform]} sur le sujet suivant: "${topic}".
+
+Ton: ${toneMap[tone]}.
+Style: Shadow Marketing — influence, impact, authenticité sombre.
+Langue: Français.
+
+Génère directement le contenu prêt à publier.`;
+}
+
+async function typeText(text) {
+  const el = document.getElementById('outputText');
+  el.textContent = '';
+  const chars = text.split('');
+  for (let i = 0; i < chars.length; i++) {
+    el.textContent += chars[i];
+    if (i % 3 === 0) await sleep(8);
+  }
+}
+
+function showOutput(text) {
+  document.getElementById('outputPlaceholder').style.display = 'none';
+  document.getElementById('outputText').style.display = 'block';
+  document.getElementById('outputText').textContent = text;
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+function selectPlatform(btn, platform) {
+  document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedPlatform = platform;
+}
+
+function selectTone(btn, tone) {
+  document.querySelectorAll('.tone-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTone = tone;
+}
+
+function copyContent() {
+  const text = document.getElementById('outputText').textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ COPIÉ !';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 COPIER'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function scrollToPricing() {
+  document.getElementById('landingPage').classList.remove('hidden');
+  document.getElementById('dashboard').classList.remove('active');
+  setTimeout(() => {
+    document.getElementById('pricing').scrollIntoView({ behavior: 'smooth' });
+  }, 100);
+}
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(tab = 'login') {
+  document.getElementById('modalOverlay').classList.add('active');
+  switchTab(tab);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+function closeModalOutside(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function switchTab(tab) {
+  document.getElementById('formLogin').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('formSignup').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('tabLogin').className = 'modal-tab' + (tab === 'login' ? ' active' : '');
+  document.getElementById('tabSignup').className = 'modal-tab' + (tab === 'signup' ? ' active' : '');
+  document.getElementById('loginMsg').textContent = '';
+  document.getElementById('signupMsg').textContent = '';
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function showMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'form-msg ' + type;
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+}
+
+function escHtml(str) {
+  return str?.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) || '';
+}
+
+
+// ============================================================
+// PAYMENT — CamPay
+// ============================================================
+let selectedOperator = 'MTN';
+let currentPaymentRef = null;
+
+function openPaymentModal() {
+  document.getElementById('paymentOverlay').classList.add('active');
+  document.getElementById('payStatus').textContent = '';
+  document.getElementById('payStatus').className = 'payment-status';
+  document.getElementById('verifyBtn').classList.remove('show');
+  document.getElementById('paySubmit').disabled = false;
+  document.getElementById('paySubmit').textContent = 'PAYER 500 FCFA';
+  selectOperator('MTN');
+}
+
+function closePaymentModal() {
+  document.getElementById('paymentOverlay').classList.remove('active');
+}
+
+function closePaymentOutside(e) {
+  if (e.target === document.getElementById('paymentOverlay')) closePaymentModal();
+}
+
+function selectOperator(op) {
+  selectedOperator = op;
+  document.getElementById('btnMTN').classList.toggle('active', op === 'MTN');
+  document.getElementById('btnOrange').classList.toggle('active', op === 'ORANGE');
+}
+
+async function initiatePayment() {
+  const phone = document.getElementById('payPhone').value.trim();
+  if (!phone) { showPayStatus('Entrez votre numéro Mobile Money.', 'error'); return; }
+
+  const btn = document.getElementById('paySubmit');
+  btn.disabled = true; btn.textContent = 'ENVOI EN COURS...';
+  showPayStatus('Initialisation du paiement...', 'pending');
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${BACKEND_URL}/api/payment/initiate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ phone, operator: selectedOperator })
+    });
+    const data = await res.json();
+
+    if (!res.ok) { showPayStatus(data.error || 'Erreur paiement.', 'error'); btn.disabled = false; btn.textContent = 'PAYER 500 FCFA'; return; }
+
+    currentPaymentRef = data.reference;
+    showPayStatus('📱 Confirmez le paiement sur votre téléphone, puis cliquez le bouton ci-dessous.', 'pending');
+    document.getElementById('verifyBtn').classList.add('show');
+    btn.textContent = 'EN ATTENTE...';
+
+  } catch (err) {
+    showPayStatus('Erreur de connexion. Réessayez.', 'error');
+    btn.disabled = false; btn.textContent = 'PAYER 500 FCFA';
+  }
+}
+
+async function verifyPayment() {
+  if (!currentPaymentRef) return;
+  const btn = document.getElementById('verifyBtn');
+  btn.textContent = 'VÉRIFICATION...'; btn.disabled = true;
+
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(`${BACKEND_URL}/api/payment/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ reference: currentPaymentRef })
+    });
+    const data = await res.json();
+
+    if (data.status === 'SUCCESSFUL') {
+      showPayStatus('🎉 ' + data.message, 'success');
+      currentProfile.plan = 'pro';
+      updatePlanUI();
+      updateQuota();
+      setTimeout(() => closePaymentModal(), 3000);
+    } else if (data.status === 'FAILED') {
+      showPayStatus('❌ ' + data.message, 'error');
+      btn.disabled = false; btn.textContent = 'RÉESSAYER';
+    } else {
+      showPayStatus('⏳ Pas encore confirmé. Réessayez dans quelques secondes.', 'pending');
+      btn.disabled = false; btn.textContent = '✅ J'AI CONFIRMÉ LE PAIEMENT';
+    }
+  } catch (err) {
+    showPayStatus('Erreur vérification. Réessayez.', 'error');
+    btn.disabled = false; btn.textContent = '✅ J'AI CONFIRMÉ LE PAIEMENT';
+  }
+}
+
+function showPayStatus(msg, type) {
+  const el = document.getElementById('payStatus');
+  el.textContent = msg;
+  el.className = 'payment-status ' + type;
+}
+
+// ============================================================
+// IMAGE GENERATOR — Canvas
+// ============================================================
+let selectedStyle = 'shadow';
+let selectedFormat = 'square';
+
+const FORMATS = {
+  square:    { w: 1080, h: 1080, label: 'Carré 1:1' },
+  portrait:  { w: 1080, h: 1350, label: 'Portrait 4:5' },
+  landscape: { w: 1280, h: 720,  label: 'Paysage 16:9' },
+  story:     { w: 1080, h: 1920, label: 'Story 9:16' }
+};
+
+const STYLES = {
+  shadow: {
+    bg: (ctx, w, h) => {
+      const g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, '#020202'); g.addColorStop(0.5, '#1A1009'); g.addColorStop(1, '#020202');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      // Gold border
+      ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 12;
+      ctx.strokeRect(30, 30, w-60, h-60);
+      ctx.strokeStyle = 'rgba(201,168,76,0.3)'; ctx.lineWidth = 2;
+      ctx.strokeRect(45, 45, w-90, h-90);
+    },
+    textColor: '#F0C060', subColor: 'rgba(201,168,76,0.6)', font: 'Bebas Neue'
+  },
+  gold: {
+    bg: (ctx, w, h) => {
+      const g = ctx.createRadialGradient(w/2, h/2, 0, w/2, h/2, w*0.8);
+      g.addColorStop(0, '#2A1F00'); g.addColorStop(0.6, '#1A1200'); g.addColorStop(1, '#050400');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      // Gold shine lines
+      ctx.strokeStyle = 'rgba(201,168,76,0.15)'; ctx.lineWidth = 1;
+      for(let i=0; i<8; i++) {
+        ctx.beginPath(); ctx.moveTo(w/2, h/2);
+        ctx.lineTo(w/2 + Math.cos(i*Math.PI/4)*w, h/2 + Math.sin(i*Math.PI/4)*h);
+        ctx.stroke();
+      }
+      ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 8; ctx.strokeRect(20, 20, w-40, h-40);
+    },
+    textColor: '#FFD700', subColor: 'rgba(255,215,0,0.6)', font: 'Georgia'
+  },
+  fire: {
+    bg: (ctx, w, h) => {
+      const g = ctx.createLinearGradient(0, h, 0, 0);
+      g.addColorStop(0, '#FF0000'); g.addColorStop(0.4, '#FF4400'); g.addColorStop(0.7, '#CC2200'); g.addColorStop(1, '#050000');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      const g2 = ctx.createRadialGradient(w/2, h, 0, w/2, h/2, h*0.7);
+      g2.addColorStop(0, 'rgba(255,100,0,0.4)'); g2.addColorStop(1, 'transparent');
+      ctx.fillStyle = g2; ctx.fillRect(0, 0, w, h);
+    },
+    textColor: '#FFE066', subColor: 'rgba(255,200,0,0.7)', font: 'Impact'
+  },
+  neon: {
+    bg: (ctx, w, h) => {
+      ctx.fillStyle = '#050010'; ctx.fillRect(0, 0, w, h);
+      const g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, 'rgba(100,0,255,0.2)'); g.addColorStop(1, 'rgba(0,200,255,0.2)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      ctx.shadowColor = '#AA00FF'; ctx.shadowBlur = 30;
+      ctx.strokeStyle = '#AA00FF'; ctx.lineWidth = 4; ctx.strokeRect(20, 20, w-40, h-40);
+      ctx.strokeStyle = '#00FFFF'; ctx.lineWidth = 2; ctx.strokeRect(35, 35, w-70, h-70);
+      ctx.shadowBlur = 0;
+    },
+    textColor: '#00FFFF', subColor: 'rgba(170,0,255,0.9)', font: 'monospace'
+  },
+  minimal: {
+    bg: (ctx, w, h) => {
+      ctx.fillStyle = '#F5F0E8'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#020202'; ctx.fillRect(0, 0, w, 12);
+      ctx.fillRect(0, h-12, w, 12);
+    },
+    textColor: '#020202', subColor: 'rgba(0,0,0,0.4)', font: 'Georgia'
+  },
+  matrix: {
+    bg: (ctx, w, h) => {
+      ctx.fillStyle = '#000500'; ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = 'rgba(0,255,0,0.03)'; ctx.font = '14px monospace';
+      for(let x=0; x<w; x+=20) for(let y=0; y<h; y+=20) {
+        ctx.fillText(Math.random()>0.5?'1':'0', x, y);
+      }
+      ctx.strokeStyle = '#00FF00'; ctx.lineWidth = 3; ctx.strokeRect(20, 20, w-40, h-40);
+    },
+    textColor: '#00FF41', subColor: 'rgba(0,200,0,0.7)', font: 'monospace'
+  },
+  sunset: {
+    bg: (ctx, w, h) => {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#0A0020'); g.addColorStop(0.4, '#4A0080');
+      g.addColorStop(0.7, '#FF4400'); g.addColorStop(1, '#FF8C00');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      // Sun
+      ctx.beginPath(); ctx.arc(w/2, h*0.75, h*0.15, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,200,0,0.3)'; ctx.fill();
+    },
+    textColor: '#FFE0B2', subColor: 'rgba(255,160,80,0.8)', font: 'Georgia'
+  },
+  ice: {
+    bg: (ctx, w, h) => {
+      const g = ctx.createLinearGradient(0, 0, w, h);
+      g.addColorStop(0, '#001020'); g.addColorStop(0.5, '#002040'); g.addColorStop(1, '#001530');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      ctx.shadowColor = '#00BFFF'; ctx.shadowBlur = 20;
+      ctx.strokeStyle = '#00BFFF'; ctx.lineWidth = 4; ctx.strokeRect(20, 20, w-40, h-40);
+      ctx.shadowBlur = 0; ctx.strokeStyle = 'rgba(0,191,255,0.3)'; ctx.lineWidth = 1;
+      ctx.strokeRect(35, 35, w-70, h-70);
+    },
+    textColor: '#E0F8FF', subColor: 'rgba(0,191,255,0.8)', font: 'monospace'
+  }
+};
+
+function selectStyle(btn, style) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedStyle = style;
+}
+
+function selectFormat(btn, fmt) {
+  document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedFormat = fmt;
+}
+
+function generateImage() {
+  const quote = document.getElementById('imgQuote').value.trim();
+  if (!quote) { alert('Entrez une citation !'); return; }
+
+  const subtitle = document.getElementById('imgSubtitle').value.trim() || 'CyberFlow — Shadow Marketing';
+  const fmt = FORMATS[selectedFormat];
+  const style = STYLES[selectedStyle];
+
+  const canvas = document.getElementById('imageCanvas');
+  canvas.width = fmt.w;
+  canvas.height = fmt.h;
+  const ctx = canvas.getContext('2d');
+
+  // Draw background
+  style.bg(ctx, fmt.w, fmt.h);
+
+  // Load fonts then draw text
+  drawImageText(ctx, quote, subtitle, fmt.w, fmt.h, style);
+
+  document.getElementById('canvasPlaceholder').style.display = 'none';
+  canvas.style.display = 'block';
+}
+
+function drawImageText(ctx, quote, subtitle, w, h, style) {
+  const padding = w * 0.1;
+  const maxWidth = w - (padding * 2);
+
+  // Quote text
+  ctx.textAlign = 'center';
+  ctx.fillStyle = style.textColor;
+
+  if (style.font !== 'monospace' && style.font !== 'Impact') {
+    ctx.shadowColor = style.textColor;
+    ctx.shadowBlur = 15;
+  }
+
+  // Auto font size
+  let fontSize = Math.floor(w * 0.08);
+  ctx.font = `bold ${fontSize}px "${style.font}", sans-serif`;
+  while (ctx.measureText(quote).width > maxWidth * 1.5 && fontSize > 24) {
+    fontSize -= 4;
+    ctx.font = `bold ${fontSize}px "${style.font}", sans-serif`;
+  }
+
+  // Word wrap
+  const words = quote.split(' ');
+  const lines = [];
+  let line = '';
+  for (const word of words) {
+    const test = line + (line ? ' ' : '') + word;
+    if (ctx.measureText(test).width > maxWidth) {
+      if (line) lines.push(line);
+      line = word;
+    } else { line = test; }
+  }
+  if (line) lines.push(line);
+
+  const lineH = fontSize * 1.3;
+  const totalH = lines.length * lineH;
+  let y = (h - totalH) / 2 - (fontSize * 0.5);
+
+  // Decorative line above
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = style.textColor;
+  ctx.lineWidth = 2;
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath(); ctx.moveTo(w*0.25, y - fontSize*0.8); ctx.lineTo(w*0.75, y - fontSize*0.8); ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Draw quote lines
+  ctx.shadowColor = style.textColor; ctx.shadowBlur = 10;
+  lines.forEach((l, i) => {
+    ctx.fillText(l, w/2, y + (i * lineH) + fontSize);
+  });
+
+  // Decorative line below
+  ctx.shadowBlur = 0;
+  ctx.globalAlpha = 0.4;
+  ctx.beginPath();
+  ctx.moveTo(w*0.25, y + totalH + fontSize*0.4);
+  ctx.lineTo(w*0.75, y + totalH + fontSize*0.4);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Subtitle
+  ctx.shadowBlur = 0;
+  const subSize = Math.floor(w * 0.025);
+  ctx.font = `${subSize}px "Share Tech Mono", monospace`;
+  ctx.fillStyle = style.subColor;
+  ctx.letterSpacing = '3px';
+  ctx.fillText(subtitle.toUpperCase(), w/2, h - (h * 0.08));
+
+  // Corner decorations
+  const cs = w * 0.04;
+  const cm = 55;
+  ctx.strokeStyle = style.textColor; ctx.lineWidth = 3; ctx.globalAlpha = 0.5;
+  [[cm,cm],[w-cm,cm],[cm,h-cm],[w-cm,h-cm]].forEach(([x,y]) => {
+    ctx.beginPath();
+    ctx.moveTo(x-cs, y); ctx.lineTo(x, y); ctx.lineTo(x, y+(y<h/2?cs:-cs));
+    ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+}
+
+function downloadImage() {
+  const canvas = document.getElementById('imageCanvas');
+  if (!canvas.width) { alert('Générez d'abord une image !'); return; }
+  const link = document.createElement('a');
+  link.download = `cyberflow-${selectedStyle}-${Date.now()}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ============================================================
+// BOOT
+// ============================================================
+init();
+</script>
+</body>
+</html>
