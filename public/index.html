@@ -1573,19 +1573,29 @@ async function signup() {
   currentUser = data.user;
   currentSession = data.session;
 
-  // Create profile via backend
-  await fetch(`${BACKEND_URL}/api/profile/create`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${currentSession?.access_token}`
-    },
-    body: JSON.stringify({ username: name, email })
+  // Créer le profil directement via Supabase (fonctionne avec ou sans confirmation email)
+  await sb.from('profiles').upsert({
+    id: data.user.id,
+    username: name,
+    email: email,
+    plan: 'free',
+    generations_today: 0,
+    last_generation_date: new Date().toISOString().split('T')[0],
+    created_at: new Date().toISOString()
   });
 
-  await loadProfile();
-  closeModal();
-  showDashboard();
+  // Cas 1 : session disponible (confirmation email désactivée)
+  if (data.session) {
+    currentSession = data.session;
+    await loadProfile();
+    closeModal();
+    showDashboard();
+  } else {
+    // Cas 2 : confirmation email requise
+    showMsg('signupMsg', '✅ Compte créé ! Connectez-vous maintenant.', 'success');
+    setTimeout(() => switchTab('login'), 2000);
+  }
+
   btn.disabled = false; btn.textContent = 'CRÉER MON COMPTE';
 }
 
