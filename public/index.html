@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
-<title>CyberFlow — Contenu Viral IA</title>
+<title>CyberFlow — Contenu Viral</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -403,14 +403,14 @@ footer{border-top:1px solid var(--border);padding:28px 20px;text-align:center}
           <div class="panel-hdr">⚙️ PARAMÈTRES</div>
           <div class="lbl" style="margin-bottom:7px">Style visuel</div>
           <div class="style-grid" id="styleGrid">
-            <button class="s-btn on" data-style="shadow">🖤 SHADOW</button>
-            <button class="s-btn" data-style="gold">✨ GOLD</button>
-            <button class="s-btn" data-style="fire">🔥 FIRE</button>
-            <button class="s-btn" data-style="neon">💜 NEON</button>
+            <button class="s-btn on" data-style="punchline">🥊 PUNCHLINE</button>
+            <button class="s-btn" data-style="shadow">🖤 SHADOW GOLD</button>
+            <button class="s-btn" data-style="fire">🔥 MOTIVATION</button>
+            <button class="s-btn" data-style="neon">💜 NEON CYBER</button>
             <button class="s-btn" data-style="minimal">⬜ MINIMAL</button>
             <button class="s-btn" data-style="matrix">💚 MATRIX</button>
             <button class="s-btn" data-style="sunset">🌅 SUNSET</button>
-            <button class="s-btn" data-style="ice">🧊 ICE</button>
+            <button class="s-btn" data-style="ice">🧊 ICE COLD</button>
           </div>
           <div class="lbl" style="margin-bottom:7px">Format</div>
           <div class="fmt-row" id="fmtRow">
@@ -532,7 +532,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // ============================================================
 let user = null, session = null, profile = null;
 let platform = 'facebook', tone = 'viral';
-let imgStyle = 'shadow', imgFmt = 'square';
+let imgStyle = 'punchline', imgFmt = 'square';
 let history = [], todayCount = 0, payRef = null, payOp = 'MTN';
 const FREE_LIMIT = 3;
 
@@ -822,134 +822,384 @@ const FMTS = {
   story:    { w: 1080, h: 1920 }
 };
 
-const STYLES = {
-  shadow: {
-    bg(ctx, w, h) {
-      const g = ctx.createLinearGradient(0,0,w,h);
-      g.addColorStop(0,'#020202'); g.addColorStop(.5,'#1A1009'); g.addColorStop(1,'#020202');
-      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-      ctx.strokeStyle='#C9A84C'; ctx.lineWidth=10; ctx.strokeRect(28,28,w-56,h-56);
-      ctx.strokeStyle='rgba(201,168,76,0.25)'; ctx.lineWidth=2; ctx.strokeRect(42,42,w-84,h-84);
-    },
-    text:'#F0C060', sub:'rgba(201,168,76,0.55)', font:'Bebas Neue'
-  },
-  gold: {
-    bg(ctx, w, h) {
-      const g = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,w*.8);
-      g.addColorStop(0,'#2A1F00'); g.addColorStop(.6,'#1A1200'); g.addColorStop(1,'#050400');
-      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-      ctx.strokeStyle='rgba(201,168,76,0.12)'; ctx.lineWidth=1;
-      for(let i=0;i<8;i++){ctx.beginPath();ctx.moveTo(w/2,h/2);ctx.lineTo(w/2+Math.cos(i*Math.PI/4)*w,h/2+Math.sin(i*Math.PI/4)*h);ctx.stroke();}
-      ctx.strokeStyle='#C9A84C'; ctx.lineWidth=7; ctx.strokeRect(18,18,w-36,h-36);
-    },
-    text:'#FFD700', sub:'rgba(255,215,0,0.55)', font:'Georgia'
-  },
-  fire: {
-    bg(ctx, w, h) {
-      const g = ctx.createLinearGradient(0,h,0,0);
-      g.addColorStop(0,'#FF0000'); g.addColorStop(.4,'#FF4400'); g.addColorStop(.7,'#CC2200'); g.addColorStop(1,'#050000');
-      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-    },
-    text:'#FFE066', sub:'rgba(255,200,0,0.65)', font:'Impact'
-  },
-  neon: {
-    bg(ctx, w, h) {
-      ctx.fillStyle='#050010'; ctx.fillRect(0,0,w,h);
-      const g = ctx.createLinearGradient(0,0,w,h);
-      g.addColorStop(0,'rgba(100,0,255,0.18)'); g.addColorStop(1,'rgba(0,200,255,0.18)');
-      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-      ctx.shadowColor='#AA00FF'; ctx.shadowBlur=24;
-      ctx.strokeStyle='#AA00FF'; ctx.lineWidth=3; ctx.strokeRect(18,18,w-36,h-36);
-      ctx.strokeStyle='#00FFFF'; ctx.lineWidth=1.5; ctx.strokeRect(32,32,w-64,h-64);
-      ctx.shadowBlur=0;
-    },
-    text:'#00FFFF', sub:'rgba(170,0,255,0.85)', font:'monospace'
-  },
-  minimal: {
-    bg(ctx, w, h) {
-      ctx.fillStyle='#F5F0E8'; ctx.fillRect(0,0,w,h);
-      ctx.fillStyle='#020202'; ctx.fillRect(0,0,w,10); ctx.fillRect(0,h-10,w,10);
-    },
-    text:'#020202', sub:'rgba(0,0,0,0.38)', font:'Georgia'
-  },
-  matrix: {
-    bg(ctx, w, h) {
-      ctx.fillStyle='#000500'; ctx.fillRect(0,0,w,h);
-      ctx.fillStyle='rgba(0,255,0,0.025)'; ctx.font='12px monospace';
-      for(let x=0;x<w;x+=18) for(let y=0;y<h;y+=18) ctx.fillText(Math.random()>.5?'1':'0',x,y);
-      ctx.strokeStyle='#00FF00'; ctx.lineWidth=2.5; ctx.strokeRect(18,18,w-36,h-36);
-    },
-    text:'#00FF41', sub:'rgba(0,200,0,0.65)', font:'monospace'
-  },
-  sunset: {
-    bg(ctx, w, h) {
-      const g = ctx.createLinearGradient(0,0,0,h);
-      g.addColorStop(0,'#0A0020'); g.addColorStop(.4,'#4A0080'); g.addColorStop(.7,'#FF4400'); g.addColorStop(1,'#FF8C00');
-      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-      ctx.beginPath(); ctx.arc(w/2,h*.75,h*.12,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,200,0,0.25)'; ctx.fill();
-    },
-    text:'#FFE0B2', sub:'rgba(255,160,80,0.75)', font:'Georgia'
-  },
-  ice: {
-    bg(ctx, w, h) {
-      const g = ctx.createLinearGradient(0,0,w,h);
-      g.addColorStop(0,'#001020'); g.addColorStop(.5,'#002040'); g.addColorStop(1,'#001530');
-      ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
-      ctx.shadowColor='#00BFFF'; ctx.shadowBlur=16;
-      ctx.strokeStyle='#00BFFF'; ctx.lineWidth=3; ctx.strokeRect(18,18,w-36,h-36);
-      ctx.shadowBlur=0;
-    },
-    text:'#E0F8FF', sub:'rgba(0,191,255,0.75)', font:'monospace'
-  }
-};
+// ============================================================
+// IMAGE GENERATOR — Styles professionnels
+// ============================================================
 
 function genImage() {
   const quote = document.getElementById('imgQuote').value.trim();
   if (!quote) { alert('Entrez une citation !'); return; }
-  const sub = document.getElementById('imgSub').value.trim() || 'CyberFlow — Shadow Marketing';
+  const sub = document.getElementById('imgSub').value.trim() || 'CYBERFLOW';
   const fmt = FMTS[imgFmt];
-  const sty = STYLES[imgStyle];
   const canvas = document.getElementById('cvs');
   canvas.width = fmt.w; canvas.height = fmt.h;
   const ctx = canvas.getContext('2d');
-  sty.bg(ctx, fmt.w, fmt.h);
-  drawText(ctx, quote, sub, fmt.w, fmt.h, sty);
+  
+  // Draw selected style
+  const styleFunc = IMAGE_STYLES[imgStyle] || IMAGE_STYLES.punchline;
+  styleFunc(ctx, fmt.w, fmt.h, quote, sub);
+  
   document.getElementById('cvsPh').style.display = 'none';
   canvas.style.display = 'block';
 }
 
-function drawText(ctx, quote, sub, w, h, sty) {
-  const pad = w * .1, maxW = w - pad * 2;
-  ctx.textAlign = 'center'; ctx.fillStyle = sty.text;
-  let fs = Math.floor(w * .08);
-  ctx.font = 'bold ' + fs + 'px "' + sty.font + '",sans-serif';
-  while(ctx.measureText(quote).width > maxW * 1.4 && fs > 22) { fs -= 3; ctx.font = 'bold ' + fs + 'px "' + sty.font + '",sans-serif'; }
-  const words = quote.split(' '), lines = [];
+// Helper: word wrap
+function wrapText(ctx, text, maxWidth) {
+  const words = text.split(' ');
+  const lines = [];
   let line = '';
-  for(const w2 of words) {
-    const test = line + (line?' ':'') + w2;
-    if(ctx.measureText(test).width > maxW) { if(line) lines.push(line); line = w2; } else line = test;
+  for (const word of words) {
+    const test = line + (line ? ' ' : '') + word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else { line = test; }
   }
-  if(line) lines.push(line);
-  const lh = fs * 1.3, totH = lines.length * lh;
-  let y = (h - totH) / 2 - fs * .4;
-  ctx.shadowColor = sty.text; ctx.shadowBlur = 10;
-  lines.forEach((l, i) => ctx.fillText(l, w/2, y + i*lh + fs));
-  ctx.shadowBlur = 0;
-  const ss = Math.floor(w * .022);
-  ctx.font = ss + 'px "Share Tech Mono",monospace';
-  ctx.fillStyle = sty.sub;
-  ctx.fillText(sub.toUpperCase(), w/2, h - h * .07);
-  ctx.strokeStyle = sty.text; ctx.lineWidth = 2; ctx.globalAlpha = .35;
-  const cs = w * .035, cm = 48;
-  [[cm,cm],[w-cm,cm],[cm,h-cm],[w-cm,h-cm]].forEach(([x,y2]) => {
-    ctx.beginPath();
-    ctx.moveTo(x-cs,y2); ctx.lineTo(x,y2); ctx.lineTo(x,y2+(y2<h/2?cs:-cs));
-    ctx.stroke();
-  });
-  ctx.globalAlpha = 1;
+  if (line) lines.push(line);
+  return lines;
 }
+
+// Helper: auto font size
+function autoFontSize(ctx, text, maxWidth, maxH, font, startSize) {
+  let fs = startSize;
+  ctx.font = 'bold ' + fs + 'px ' + font;
+  while (fs > 28) {
+    ctx.font = 'bold ' + fs + 'px ' + font;
+    const lines = wrapText(ctx, text, maxWidth);
+    if (lines.length * fs * 1.3 < maxH) break;
+    fs -= 4;
+  }
+  return fs;
+}
+
+// Helper: draw brand badge (rouge style punchline lab)
+function drawBadge(ctx, text, x, y, w, h, bg, fg) {
+  ctx.fillStyle = bg;
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = fg;
+  ctx.font = 'bold ' + Math.floor(h * 0.6) + 'px Arial,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x + w/2, y + h/2);
+  ctx.textBaseline = 'alphabetic';
+}
+
+// Helper: draw opening quote mark
+function drawQuoteMark(ctx, x, y, size, color) {
+  ctx.fillStyle = color;
+  ctx.font = 'bold ' + size + 'px Georgia,serif';
+  ctx.textAlign = 'left';
+  ctx.fillText('“', x, y);
+}
+
+const IMAGE_STYLES = {
+
+  // STYLE 1 — Punchline Lab (comme l'exemple)
+  punchline(ctx, w, h, quote, brand) {
+    // Fond noir profond
+    ctx.fillStyle = '#0A0A0A';
+    ctx.fillRect(0, 0, w, h);
+    
+    // Vignette sur les bords
+    const vig = ctx.createRadialGradient(w/2,h/2,h*0.3,w/2,h/2,h*0.9);
+    vig.addColorStop(0,'transparent');
+    vig.addColorStop(1,'rgba(0,0,0,0.7)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0,0,w,h);
+
+    // Grand guillemet doré en haut à gauche
+    drawQuoteMark(ctx, w*0.06, h*0.22, w*0.22, '#C9A84C');
+
+    // Ligne décorative rouge en haut à droite (griffures)
+    ctx.strokeStyle = '#CC0000';
+    ctx.lineWidth = w * 0.008;
+    ctx.lineCap = 'round';
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(w*0.82 + i*w*0.025, h*0.04);
+      ctx.lineTo(w*0.72 + i*w*0.025, h*0.13);
+      ctx.stroke();
+    }
+
+    // Badge marque en haut à droite
+    const bw = w * 0.32, bh = h * 0.055;
+    const bx = w - bw - w*0.04, by = h*0.04;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(bx, by, bw, bh);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold ' + Math.floor(bh*0.55) + 'px Arial,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(brand.split(' ')[0] || brand, bx + bw*0.08, by + bh/2);
+    // Badge rouge pour 2ème mot
+    const word2 = brand.split(' ')[1] || '';
+    if (word2) {
+      const tw = ctx.measureText(brand.split(' ')[0]).width + bw*0.12;
+      ctx.fillStyle = '#CC0000';
+      const rw = bw * 0.38, rh = bh * 0.75;
+      ctx.fillRect(bx + tw, by + bh*0.125, rw, rh);
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold ' + Math.floor(bh*0.5) + 'px Arial,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(word2, bx + tw + rw/2, by + bh/2);
+    }
+    ctx.textBaseline = 'alphabetic';
+
+    // CITATION — centre de l'image
+    const pad = w * 0.1;
+    const maxW = w - pad * 2;
+    const maxH = h * 0.35;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#FFFFFF';
+    let fs = autoFontSize(ctx, quote, maxW, maxH, 'Arial,sans-serif', Math.floor(w*0.075));
+    ctx.font = 'bold ' + fs + 'px Arial,sans-serif';
+    const lines = wrapText(ctx, quote, maxWidth = maxW);
+    const lh = fs * 1.35;
+    const totalH = lines.length * lh;
+    const startY = h * 0.55 - totalH/2;
+    
+    // Ombre portée sur le texte
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 20;
+    ctx.shadowOffsetX = 3;
+    ctx.shadowOffsetY = 3;
+    lines.forEach((l, i) => {
+      ctx.fillText(l, w/2, startY + i*lh + fs);
+    });
+    ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
+
+    // Badge marque en bas (centré)
+    const bbw = w * 0.38, bbh = h * 0.055;
+    const bbx = w/2 - bbw/2, bby = h*0.87;
+    ctx.fillStyle = '#111';
+    ctx.fillRect(bbx, bby, bbw, bbh);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold ' + Math.floor(bbh*0.55) + 'px Arial,sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(brand.split(' ')[0] || brand, bbx + bbw*0.08, bby + bbh/2);
+    if (word2) {
+      const tw2 = ctx.measureText(brand.split(' ')[0]).width + bbw*0.12;
+      ctx.fillStyle = '#CC0000';
+      const rw2 = bbw * 0.38, rh2 = bbh * 0.75;
+      ctx.fillRect(bbx + tw2, bby + bbh*0.125, rw2, rh2);
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold ' + Math.floor(bbh*0.5) + 'px Arial,sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(word2, bbx + tw2 + rw2/2, bby + bbh/2);
+    }
+    ctx.textBaseline = 'alphabetic';
+  },
+
+  // STYLE 2 — Shadow Gold (noir et or)
+  shadow(ctx, w, h, quote, brand) {
+    const g = ctx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#020202'); g.addColorStop(0.5,'#1A1009'); g.addColorStop(1,'#020202');
+    ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+    
+    // Bordures gold double
+    ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = w*0.01; ctx.strokeRect(w*0.04,h*0.04,w*0.92,h*0.92);
+    ctx.strokeStyle = 'rgba(201,168,76,0.3)'; ctx.lineWidth = w*0.003; ctx.strokeRect(w*0.055,h*0.055,w*0.89,h*0.89);
+    
+    // Guillemet doré
+    drawQuoteMark(ctx, w*0.08, h*0.22, w*0.18, '#C9A84C');
+    
+    // Citation
+    const pad = w*0.12, maxW = w - pad*2;
+    ctx.textAlign = 'center'; ctx.fillStyle = '#F0C060';
+    let fs = autoFontSize(ctx, quote, maxW, h*0.4, 'Georgia,serif', Math.floor(w*0.07));
+    ctx.font = 'bold ' + fs + 'px Georgia,serif';
+    const lines = wrapText(ctx, quote, maxW);
+    const lh = fs*1.35, totH = lines.length*lh;
+    const sy = h/2 - totH/2;
+    ctx.shadowColor = '#C9A84C'; ctx.shadowBlur = 15;
+    lines.forEach((l,i) => ctx.fillText(l, w/2, sy + i*lh + fs));
+    ctx.shadowBlur = 0;
+    
+    // Ligne déco sous citation
+    ctx.strokeStyle = '#C9A84C'; ctx.lineWidth = 2; ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.moveTo(w*0.3, sy+totH+fs*0.5); ctx.lineTo(w*0.7, sy+totH+fs*0.5); ctx.stroke();
+    ctx.globalAlpha = 1;
+    
+    // Branding bas
+    ctx.fillStyle = '#C9A84C';
+    ctx.font = 'bold ' + Math.floor(w*0.025) + 'px Arial,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('— ' + brand.toUpperCase() + ' —', w/2, h*0.9);
+  },
+
+  // STYLE 3 — Motivation Rouge
+  fire(ctx, w, h, quote, brand) {
+    const g = ctx.createLinearGradient(0,h,0,0);
+    g.addColorStop(0,'#1A0000'); g.addColorStop(0.5,'#3D0000'); g.addColorStop(1,'#050000');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    
+    // Effet lumière centrale
+    const gl = ctx.createRadialGradient(w/2,h*0.6,0,w/2,h*0.6,w*0.6);
+    gl.addColorStop(0,'rgba(255,60,0,0.25)'); gl.addColorStop(1,'transparent');
+    ctx.fillStyle=gl; ctx.fillRect(0,0,w,h);
+
+    // Ligne rouge haut
+    ctx.fillStyle='#CC0000'; ctx.fillRect(0,0,w,h*0.008);
+    ctx.fillRect(0,h-h*0.008,w,h*0.008);
+    
+    // Guillemet
+    drawQuoteMark(ctx, w*0.07, h*0.22, w*0.18, '#FF4400');
+    
+    // Citation blanche bold
+    const pad=w*0.1, maxW=w-pad*2;
+    ctx.textAlign='center'; ctx.fillStyle='#FFFFFF';
+    let fs = autoFontSize(ctx, quote, maxW, h*0.45, 'Arial,sans-serif', Math.floor(w*0.075));
+    ctx.font='bold '+fs+'px Arial,sans-serif';
+    const lines=wrapText(ctx,quote,maxW);
+    const lh=fs*1.35, totH=lines.length*lh, sy=h/2-totH/2;
+    ctx.shadowColor='rgba(255,60,0,0.8)'; ctx.shadowBlur=20;
+    lines.forEach((l,i) => ctx.fillText(l,w/2,sy+i*lh+fs));
+    ctx.shadowBlur=0;
+    
+    // Branding
+    ctx.fillStyle='#FF4400';
+    ctx.font='bold '+Math.floor(w*0.025)+'px Arial,sans-serif';
+    ctx.fillText('— '+brand.toUpperCase()+' —',w/2,h*0.9);
+  },
+
+  // STYLE 4 — Neon Cyber
+  neon(ctx, w, h, quote, brand) {
+    ctx.fillStyle='#030010'; ctx.fillRect(0,0,w,h);
+    const g=ctx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'rgba(80,0,200,0.2)'); g.addColorStop(1,'rgba(0,180,255,0.2)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    
+    // Bordures neon
+    ctx.shadowColor='#AA00FF'; ctx.shadowBlur=30;
+    ctx.strokeStyle='#AA00FF'; ctx.lineWidth=3; ctx.strokeRect(20,20,w-40,h-40);
+    ctx.strokeStyle='#00FFFF'; ctx.lineWidth=1.5; ctx.strokeRect(35,35,w-70,h-70);
+    ctx.shadowBlur=0;
+    
+    // Guillemet cyan
+    drawQuoteMark(ctx, w*0.07, h*0.22, w*0.18, '#00FFFF');
+    
+    // Citation
+    const pad=w*0.1, maxW=w-pad*2;
+    ctx.textAlign='center'; ctx.fillStyle='#00FFFF';
+    let fs=autoFontSize(ctx,quote,maxW,h*0.4,'Arial,sans-serif',Math.floor(w*0.07));
+    ctx.font='bold '+fs+'px Arial,sans-serif';
+    const lines=wrapText(ctx,quote,maxW);
+    const lh=fs*1.35, totH=lines.length*lh, sy=h/2-totH/2;
+    ctx.shadowColor='#00FFFF'; ctx.shadowBlur=25;
+    lines.forEach((l,i) => ctx.fillText(l,w/2,sy+i*lh+fs));
+    ctx.shadowBlur=0;
+    
+    // Branding
+    ctx.fillStyle='#AA00FF';
+    ctx.font='bold '+Math.floor(w*0.025)+'px monospace';
+    ctx.fillText('[ '+brand.toUpperCase()+' ]',w/2,h*0.9);
+  },
+
+  // STYLE 5 — Minimal Blanc
+  minimal(ctx, w, h, quote, brand) {
+    ctx.fillStyle='#F8F5EE'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#111'; ctx.fillRect(0,0,w,h*0.01); ctx.fillRect(0,h-h*0.01,w,h*0.01);
+    
+    // Guillemet noir
+    drawQuoteMark(ctx, w*0.07, h*0.22, w*0.16, '#111');
+    
+    const pad=w*0.12, maxW=w-pad*2;
+    ctx.textAlign='center'; ctx.fillStyle='#111';
+    let fs=autoFontSize(ctx,quote,maxW,h*0.45,'Georgia,serif',Math.floor(w*0.07));
+    ctx.font='bold '+fs+'px Georgia,serif';
+    const lines=wrapText(ctx,quote,maxW);
+    const lh=fs*1.4, totH=lines.length*lh, sy=h/2-totH/2;
+    lines.forEach((l,i) => ctx.fillText(l,w/2,sy+i*lh+fs));
+    
+    // Ligne déco
+    ctx.strokeStyle='#111'; ctx.lineWidth=2; ctx.globalAlpha=0.3;
+    ctx.beginPath(); ctx.moveTo(w*0.35,sy+totH+fs*0.6); ctx.lineTo(w*0.65,sy+totH+fs*0.6); ctx.stroke();
+    ctx.globalAlpha=1;
+    
+    ctx.fillStyle='rgba(0,0,0,0.5)';
+    ctx.font=Math.floor(w*0.022)+'px Georgia,serif';
+    ctx.fillText('— '+brand+' —',w/2,h*0.9);
+  },
+
+  // STYLE 6 — Matrix Code
+  matrix(ctx, w, h, quote, brand) {
+    ctx.fillStyle='#000500'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='rgba(0,255,0,0.02)'; ctx.font='11px monospace';
+    for(let x=0;x<w;x+=16) for(let y=0;y<h;y+=16)
+      ctx.fillText(Math.random()>.5?'1':'0',x,y);
+    ctx.strokeStyle='#00FF00'; ctx.lineWidth=3; ctx.strokeRect(18,18,w-36,h-36);
+    
+    drawQuoteMark(ctx, w*0.07, h*0.22, w*0.17, '#00FF00');
+    
+    const pad=w*0.1, maxW=w-pad*2;
+    ctx.textAlign='center'; ctx.fillStyle='#00FF41';
+    let fs=autoFontSize(ctx,quote,maxW,h*0.4,'monospace',Math.floor(w*0.065));
+    ctx.font='bold '+fs+'px monospace';
+    const lines=wrapText(ctx,quote,maxW);
+    const lh=fs*1.35, totH=lines.length*lh, sy=h/2-totH/2;
+    ctx.shadowColor='#00FF00'; ctx.shadowBlur=15;
+    lines.forEach((l,i) => ctx.fillText(l,w/2,sy+i*lh+fs));
+    ctx.shadowBlur=0;
+    ctx.fillStyle='#00AA00';
+    ctx.font='bold '+Math.floor(w*0.022)+'px monospace';
+    ctx.fillText('> '+brand.toUpperCase()+' <',w/2,h*0.9);
+  },
+
+  // STYLE 7 — Sunset Violet
+  sunset(ctx, w, h, quote, brand) {
+    const g=ctx.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#0D001A'); g.addColorStop(0.45,'#3D0070'); g.addColorStop(0.75,'#CC2200'); g.addColorStop(1,'#FF6600');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    
+    // Soleil
+    const gl=ctx.createRadialGradient(w/2,h*.8,0,w/2,h*.8,w*.4);
+    gl.addColorStop(0,'rgba(255,200,0,0.35)'); gl.addColorStop(1,'transparent');
+    ctx.fillStyle=gl; ctx.fillRect(0,0,w,h);
+    
+    drawQuoteMark(ctx, w*0.07, h*0.22, w*0.17, '#FFD700');
+    
+    const pad=w*0.1, maxW=w-pad*2;
+    ctx.textAlign='center'; ctx.fillStyle='#FFE0B2';
+    let fs=autoFontSize(ctx,quote,maxW,h*0.4,'Arial,sans-serif',Math.floor(w*0.07));
+    ctx.font='bold '+fs+'px Arial,sans-serif';
+    const lines=wrapText(ctx,quote,maxW);
+    const lh=fs*1.35, totH=lines.length*lh, sy=h*.45-totH/2;
+    ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=20;
+    lines.forEach((l,i) => ctx.fillText(l,w/2,sy+i*lh+fs));
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(255,220,150,0.8)';
+    ctx.font='bold '+Math.floor(w*0.022)+'px Arial,sans-serif';
+    ctx.fillText('— '+brand.toUpperCase()+' —',w/2,h*.88);
+  },
+
+  // STYLE 8 — Ice Cold
+  ice(ctx, w, h, quote, brand) {
+    const g=ctx.createLinearGradient(0,0,w,h);
+    g.addColorStop(0,'#001525'); g.addColorStop(0.5,'#002D4A'); g.addColorStop(1,'#001020');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+    
+    ctx.shadowColor='#00BFFF'; ctx.shadowBlur=20;
+    ctx.strokeStyle='#00BFFF'; ctx.lineWidth=3; ctx.strokeRect(20,20,w-40,h-40);
+    ctx.strokeStyle='rgba(0,191,255,0.2)'; ctx.lineWidth=1; ctx.strokeRect(35,35,w-70,h-70);
+    ctx.shadowBlur=0;
+    
+    drawQuoteMark(ctx, w*0.07, h*0.22, w*0.17, '#00BFFF');
+    
+    const pad=w*0.1, maxW=w-pad*2;
+    ctx.textAlign='center'; ctx.fillStyle='#E0F8FF';
+    let fs=autoFontSize(ctx,quote,maxW,h*0.4,'Arial,sans-serif',Math.floor(w*0.07));
+    ctx.font='bold '+fs+'px Arial,sans-serif';
+    const lines=wrapText(ctx,quote,maxW);
+    const lh=fs*1.35, totH=lines.length*lh, sy=h/2-totH/2;
+    ctx.shadowColor='#00BFFF'; ctx.shadowBlur=20;
+    lines.forEach((l,i) => ctx.fillText(l,w/2,sy+i*lh+fs));
+    ctx.shadowBlur=0;
+    ctx.fillStyle='rgba(0,191,255,0.8)';
+    ctx.font='bold '+Math.floor(w*0.022)+'px Arial,sans-serif';
+    ctx.fillText('— '+brand.toUpperCase()+' —',w/2,h*0.9);
+  }
+};
 
 function dlImage() {
   const canvas = document.getElementById('cvs');
